@@ -317,22 +317,27 @@ func _parse_while(parent : AST.ASTNode) -> AST.While:
 	return ast
 
 
+
+
 func _parse_class_name(parent : AST.ASTNode) -> void:
 	var token : Token = _tokenizer.get_next()
 	if !token.is_symbol():
 		_Logger.write("ERROR: Parser._parse_class_name() - Symbol expected!")
 		return
-	
+
 	var ast : AST.ASTNode = parent
 	while ast.get_parent() and not ast is AST.Class:
 		ast = ast.get_parent()
-	
-	_class_symbol = _symbol_table.create_symbol(ast, token.get_value())
-	ast.symbol = _class_symbol
-	
-	_symbol_table.lock_symbol_name(token.get_value()) #NOTE class_name obfuscation currently disabled
-	
+		
+	ast.symbol = _symbol_table.create_global_symbol(token.get_value())
+
 	token.link_symbol(ast.symbol)
+	if _line_has_hint(PreprocessorHints.LOCK_SYMBOLS):
+		_symbol_table.lock_symbol(ast.symbol)
+
+	if _class_symbol and _is_autoload:
+		_class_symbol.add_child(ast.symbol)
+
 
 
 func _parse_extends(parent : AST.ASTNode) -> void:
