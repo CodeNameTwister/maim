@@ -48,9 +48,10 @@ func _read_preprocessor(src : String) -> void:
 	
 	for mtch : RegExMatch in _pregex.search_all(src):
 		_stream_preprocessor[mtch.get_string(0).trim_prefix(_Settings.current.preprocessor_prefix)] = mtch.get_string(1).strip_edges()
-	
-	_strip_static_typing = has_preprocessor(PreprocessorHints.STRIP_STATIC_TYPED_HINT) or has_preprocessor(PreprocessorHints.STRIP_STATIC_TYPED_INITIALIZED_HINT) or _Settings.current.strip_static_typing
-	_strip_static_typing_initialized = has_preprocessor(PreprocessorHints.STRIP_STATIC_TYPED_INITIALIZED_HINT) or _strip_static_typing_initialized or _Settings.current.striped_static_typing_be_initialized
+
+	if !has_preprocessor(PreprocessorHints.STRIP_IGNORE_STATIC_TYPED_HINT):
+		_strip_static_typing = has_preprocessor(PreprocessorHints.STRIP_STATIC_TYPED_HINT) or has_preprocessor(PreprocessorHints.STRIP_STATIC_TYPED_INITIALIZED_HINT) or _Settings.current.strip_static_typing
+		_strip_static_typing_initialized = has_preprocessor(PreprocessorHints.STRIP_STATIC_TYPED_INITIALIZED_HINT) or _strip_static_typing_initialized or _Settings.current.striped_static_typing_be_initialized
 
 func has_preprocessor(preprocessor : String) -> bool:
 	return _stream_preprocessor.has(preprocessor)
