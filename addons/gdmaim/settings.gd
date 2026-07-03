@@ -150,11 +150,27 @@ func serialize() -> void:
 	_write_entries()
 	if !DirAccess.dir_exists_absolute(_get_cfg_dir()):
 		DirAccess.make_dir_recursive_absolute(_get_cfg_dir())
-	_cfg.save(_get_cfg_dir() + "/export.cfg")
+		
+	_cfg.save(_get_cfg_dir() + "/export.cfg") # portable
+	
+	if !DirAccess.dir_exists_absolute("res://.gdmaim"):
+		DirAccess.make_dir_absolute("res://.gdmaim")
+		
+	if !FileAccess.file_exists("res://.gdmaim/.gdignore"):
+		var file : FileAccess = FileAccess.open("res://.gdmaim/.gdignore", FileAccess.WRITE)
+		if is_instance_valid(file):
+			file.store_string("# gdmaim plugin settings.")
+			file.close()
+		
+	_cfg.save("res://.gdmaim/export.cfg")
 
 
 func deserialize() -> void:
-	_cfg.load(_get_cfg_dir() + "/export.cfg")
+	#Safe alternative settings
+	if FileAccess.file_exists("res://.gdmaim/export.cfg"):
+		_cfg.load("res://.gdmaim/export.cfg")
+	else:
+		_cfg.load(_get_cfg_dir() + "/export.cfg")
 	_read_entries()
 
 
