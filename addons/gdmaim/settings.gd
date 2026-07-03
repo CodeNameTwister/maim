@@ -167,9 +167,7 @@ func serialize() -> void:
 
 func deserialize() -> void:
 	#Safe alternative settings
-	if FileAccess.file_exists("res://.gdmaim/export.cfg"):
-		_cfg.load("res://.gdmaim/export.cfg")
-	else:
+	if _cfg.load("res://.gdmaim/export.cfg") != OK:
 		_cfg.load(_get_cfg_dir() + "/export.cfg")
 	_read_entries()
 
