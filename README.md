@@ -11,7 +11,7 @@ A plugin for the [Godot Engine] which obfuscates all GDScripts when exporting a 
 ## Related Post Topic
 > [!NOTE]
 > It may contain spelling errors and misunderstandings.
-* Video: [Load / Save Resources using GDMaim - Godot](https://youtu.be/W9FD6h1VpFs) (In Runtime, for Exported projects) 
+* Video: [Fix Load / Save Resources using GDMaim - Godot](https://youtu.be/W9FD6h1VpFs) (In Runtime, for Exported projects - Issue [#157](https://github.com/cherriesandmochi/gdmaim/issues/157)) 
 * [GDMaim - 2026](https://ko-fi.com/post/GDMaim-A2A424RY4Y)
 
 
@@ -513,7 +513,7 @@ In both cases you will need to block the obfuscation of the tokens (Your variabl
 * Use preprocessors like ```##LOCK_SYMBOLS``` or ```##EXCLUDE_FILE```
 
 ###### Aditional Video Guide
-* [Load / Save Resources using GDMaim - Godot](https://youtu.be/W9FD6h1VpFs)
+* [Fix Load / Save Resources using GDMaim - Godot](https://youtu.be/W9FD6h1VpFs)
 
 
 ## Stability [↑](#table-of-contents)
