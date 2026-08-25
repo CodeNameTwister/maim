@@ -250,7 +250,7 @@ func _func_feature_filter(token : Token, line : Tokenizer.Line, feature : String
 			var ret_type : String = token.get_value()
 			
 			if ret_type != "void":
-				var return_type : String = ret_type.split("[", false, 1)[0]
+				var return_type : String = ret_type.split("[", true, 1)[0]
 				
 				for x in TYPE_MAX:
 					if type_string(x) == return_type:
