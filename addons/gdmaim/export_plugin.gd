@@ -159,7 +159,7 @@ func _export_begin(features : PackedStringArray, is_debug : bool, path : String,
 			_symbols.lock_symbol_name(symbol)
 	
 	# Parse scripts and gather their symbols
-	for paths in [scripts, _get_files("res://", ".scn"), _get_files("res://", ".scn")]:
+	for paths in [scripts, _get_files("res://", ".tscn"), _get_files("res://", ".scn")]:
 		for script_path in paths:
 			_parse_script(script_path)
 	
@@ -408,7 +408,7 @@ func _parse_script(path : String) -> void:
 		var script : Script = load(path)
 		source_code = str(script.source_code.strip_edges(), "\n")
 		
-	elif path.ends_with(".scn") or path.ends_with(".scn"):		
+	elif path.ends_with(".tscn") or path.ends_with(".scn"):		
 		#SOURCE
 		var source_codes : Array[String] = []
 		var data : String = ""
