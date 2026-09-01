@@ -9,7 +9,7 @@ const ResourceObfuscator := preload("obfuscator/resource/resource_obfuscator.gd"
 const SymbolTable := preload("obfuscator/symbol_table.gd")
 const Tokenizer := preload("obfuscator/script/tokenizer/tokenizer.gd")
 const Token := preload("obfuscator/script/tokenizer/token.gd")
-const ResourcePipe = preload("uid://dmqdx1jn8fou2")
+const Binash = preload("util/binash.gd")
 
 const SOURCE_MAP_EXT : String = ".gd.map"
 const GODOT_CLASS_CACHE_PATH : String = "res://.godot/global_script_class_cache.cfg"
@@ -34,7 +34,7 @@ var _rgx : RegEx
 var _godot_files : GodotFiles
 var _compiler
 var _compress_mode : int
-var _pipe : ResourcePipe
+var _binash : Binash
 
 #region addon_path
 static var _addon_path : String = "res://addons/gdmaim/"
@@ -98,7 +98,8 @@ func _export_begin(features : PackedStringArray, is_debug : bool, path : String,
 	_res_obfuscators.clear()
 	
 	_symbols = SymbolTable.new(settings)
-	_pipe = ResourcePipe.new()
+
+	_binash = Binash.new()
 	
 	_inject_autoload = ""
 	if settings.source_map_inject_name:
@@ -191,16 +192,16 @@ func _export_begin(features : PackedStringArray, is_debug : bool, path : String,
 	_symbols.obfuscate_symbols()
 	
 	# Initialize gdbc if necessary
-	if settings.export_mode != settings.GDMaimExportMode.TEXT and ClassDB.class_exists("BytecodeCompiler"):
+	if settings.export_mode != settings.ExportMode.TEXT and ClassDB.class_exists("BytecodeCompiler"):
 		_compiler = ClassDB.instantiate("BytecodeCompiler")
-		if settings.export_mode == settings.GDMaimExportMode.BINARY:
+		if settings.export_mode == settings.ExportMode.BINARY:
 			print("GDMaim - Exporting scripts as binary tokens.")
 			_compress_mode = _compiler.UNCOMPRESSED
 		else:
 			print("GDMaim - Exporting scripts as compressed binary tokens.")
 			_compress_mode = _compiler.COMPRESSED
 	else:
-		if settings.export_mode != settings.GDMaimExportMode.TEXT and !ClassDB.class_exists("BytecodeCompiler"):
+		if settings.export_mode != settings.ExportMode.TEXT and !ClassDB.class_exists("BytecodeCompiler"):
 			printerr("GDMaim - Failed to locate GDBC! Cannot compile scripts to bytecode!")
 		print("GDMaim - Exporting scripts as plain text.")
 	
@@ -300,7 +301,6 @@ func _export_end() -> void:
 	_symbols = null
 	_src_obfuscators.clear()
 	_res_obfuscators.clear()
-	_pipe = null
 	_Logger.clear_all()
 	
 	if is_instance_valid(settings):
@@ -321,40 +321,46 @@ func _export_file(path : String, type : String, features : PackedStringArray) ->
 	elif ext == "ico":
 		skip() #HACK
 		add_file(path, FileAccess.get_file_as_bytes(path), true) #HACK
-			
 	elif ext == "tres" or ext == "tscn":
-		#if settings.obfuscate_export_vars or ext == "tscn" or _src_obfuscators.has(str(path,":",0)):
-		var data : String = _obfuscate_resource(path, FileAccess.get_file_as_string(path))
-		skip()
-		
-		if settings.GDMaimExportMode.TEXT != settings.export_mode:
-			var binary_data : PackedByteArray = _convert_text_to_binary_resource(ext, data)
+		if settings.obfuscate_export_vars or ext == "tscn" or _src_obfuscators.has(str(path,":",0)):
+			var data : String = _obfuscate_resource(path, FileAccess.get_file_as_string(path))
 			
-			if binary_data.size() > 0:
-				add_file(path.trim_suffix(ext) + _pipe.EXTENSIONS.get(ext, "res"), binary_data, true)
-				return
-		
-		add_file(path, data.to_utf8_buffer(), false)
-		
-	elif ext == "res" or ext == "scn":
-		#if settings.obfuscate_export_vars or ext == "scn" or _src_obfuscators.has(str(path,":",0)):
-		var data : String = _pipe.res2text(path)
-		if !data.is_empty():
 			skip()
 			
-			data = _obfuscate_resource(path, _pipe.res2text(path))
-		
-			if settings.GDMaimExportMode.TEXT != settings.export_mode:
-				var binary_data : PackedByteArray = _convert_text_to_binary_resource(str(_pipe.EXTENSIONS.find_key(ext)), data)
+			if settings.export_mode != settings.ExportMode.TEXT:
+				var bytes : PackedByteArray = _binash.get_bytes_from_text(data, ext, settings.export_mode == settings.ExportMode.COMPRESSED)
 				
-				if binary_data.size() > 0:
-					add_file(path.trim_suffix(ext) + _pipe.EXTENSIONS.get(ext, "res"), binary_data, true)
+				if bytes.size() > 0:
+					add_file(path.trim_suffix(ext) + ext.trim_prefix("t"), bytes, true)
 					return
-		
+					
+				printerr("[GDMaim] convertion error for: ", path)
+			
 			add_file(path, data.to_utf8_buffer(), false)
 			
-		return
-		
+	elif ext == "res" or ext == "scn":
+		if settings.obfuscate_export_vars or ext == "scn" or _src_obfuscators.has(str(path,":",0)):
+			var data : String = _binash.get_text(path)
+			
+			if !data.is_empty():
+				data = _obfuscate_resource(path, data)
+				skip()
+				
+				if settings.export_mode != settings.ExportMode.TEXT:
+					
+					var bytes : PackedByteArray = _binash.get_bytes_from_text(data, "t" + ext, settings.export_mode == settings.ExportMode.COMPRESSED)
+					
+					if bytes.size() > 0:
+						add_file(path, bytes, false)
+						return
+						
+					printerr("[GDMaim] convertion error file: ", path)
+					
+				add_file(path.trim_suffix(ext) + "t" + ext, data.to_utf8_buffer(), true)
+				return
+				
+			printerr("[GDMaim] error on read file: ", path)
+				
 	elif ext == "gd":
 		var code : String = _obfuscate_script(path)
 		var bytes : PackedByteArray
@@ -417,7 +423,7 @@ func _parse_script(path : String) -> void:
 			_rgx = RegEx.create_from_string('(?m)script\\/source\\s*=\\s*"((?:\\\\.|[^"\\\\])*)\n"')
 			
 		if path.ends_with(".scn"):
-			data =_pipe.res2text(path)
+			data = _binash.get_text(path)
 		else:
 			var file : FileAccess = FileAccess.open(path, FileAccess.READ)
 			data = file.get_as_text()
@@ -592,7 +598,20 @@ static func _build_data_path(path : String) -> void:
 
 
 func _convert_text_to_binary_resource(extension : String, text_data : String) -> PackedByteArray:
-	return _pipe.text2bin(text_data, extension, settings.export_mode == settings.GDMaimExportMode.COMPRESSED)
+	return PackedByteArray() # does NOT work right now, as obfuscated expors vars will not get serialized
+	
+	var path : String = get_script().resource_path.get_base_dir() + "/cache/convert."
+	var binary_ext : String = "scn" if extension == "tscn" else "res"
+	
+	_write_file_str(path + extension, text_data)
+	var resource : Resource = ResourceLoader.load(path + extension, "", ResourceLoader.CACHE_MODE_IGNORE)
+	if !resource:
+		return PackedByteArray()
+	
+	ResourceSaver.save(resource, path + binary_ext)
+	
+	return FileAccess.get_file_as_bytes(path + binary_ext)
+
 
 func strip(path : String) -> String:
 	var out : String = ""
