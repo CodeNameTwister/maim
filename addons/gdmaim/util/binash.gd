@@ -100,8 +100,8 @@ func get_text(path_file : String) -> String:
 		if ResourceSaver.save(res, xfout, ResourceSaver.FLAG_NONE) == OK:
 			xout = FileAccess.get_file_as_string(xfout)
 			
-	#ResourceLoader.remove_resource_format_loader(formo)
-	#ResourceLoader.set_abort_on_missing_resources(true)
+	ResourceLoader.remove_resource_format_loader(formo)
+	ResourceLoader.set_abort_on_missing_resources(true)
 	
 	if !debug:
 		Engine.print_error_messages = pout
