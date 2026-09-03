@@ -34,7 +34,7 @@ class Formo extends ResourceFormatLoader:
 		return true
 		
 	func _get_recognized_extensions() -> PackedStringArray:
-		return ["tres", "res", "tscn", "scn", "gd", "sc"]
+		return ["tres", "res", "tscn", "scn", "gd", "cs"]
 		
 	func _recognize_path(path: String, _type: StringName) -> bool:
 		return path != _pathor
@@ -84,13 +84,14 @@ func get_text(path_file : String) -> String:
 	var xout : String = ""
 	var pout : bool = Engine.print_error_messages
 	
+	formo.set_pathor(path_file)
 	ResourceLoader.set_abort_on_missing_resources(false)
 	ResourceLoader.add_resource_format_loader(formo, true)
 	
 	if !debug:
 		Engine.print_error_messages = false
 	
-	var res : Resource = ResourceLoader.load(path_file)
+	var res : Resource = ResourceLoader.load(path_file, "", ResourceLoader.CACHE_MODE_IGNORE_DEEP)
 	if res:
 		var xfout : String = "user://xtmp.tres"
 		if path_file.ends_with(".scn"):
@@ -102,6 +103,7 @@ func get_text(path_file : String) -> String:
 			
 	ResourceLoader.remove_resource_format_loader(formo)
 	ResourceLoader.set_abort_on_missing_resources(true)
+	formo.reset()
 	
 	if !debug:
 		Engine.print_error_messages = pout

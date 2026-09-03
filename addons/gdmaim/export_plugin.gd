@@ -302,6 +302,7 @@ func _export_end() -> void:
 	_src_obfuscators.clear()
 	_res_obfuscators.clear()
 	_Logger.clear_all()
+	_binash = null
 	
 	if is_instance_valid(settings):
 		settings.custom_token_regex_buffer.clear()
@@ -595,22 +596,6 @@ static func _build_data_path(path : String) -> void:
 	if !DirAccess.dir_exists_absolute(path):
 		DirAccess.make_dir_recursive_absolute(path)
 	_write_file_str(path + "/.gdignore", "")
-
-
-func _convert_text_to_binary_resource(extension : String, text_data : String) -> PackedByteArray:
-	return PackedByteArray() # does NOT work right now, as obfuscated expors vars will not get serialized
-	
-	var path : String = get_script().resource_path.get_base_dir() + "/cache/convert."
-	var binary_ext : String = "scn" if extension == "tscn" else "res"
-	
-	_write_file_str(path + extension, text_data)
-	var resource : Resource = ResourceLoader.load(path + extension, "", ResourceLoader.CACHE_MODE_IGNORE)
-	if !resource:
-		return PackedByteArray()
-	
-	ResourceSaver.save(resource, path + binary_ext)
-	
-	return FileAccess.get_file_as_bytes(path + binary_ext)
 
 
 func strip(path : String) -> String:
