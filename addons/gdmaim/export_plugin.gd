@@ -99,7 +99,7 @@ func _export_begin(features : PackedStringArray, is_debug : bool, path : String,
 	
 	_symbols = SymbolTable.new(settings)
 
-	_binash = Binash.new()
+	_binash = Binash.new(path)
 	
 	_inject_autoload = ""
 	if settings.source_map_inject_name:
