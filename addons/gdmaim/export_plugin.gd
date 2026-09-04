@@ -329,7 +329,7 @@ func _export_file(path : String, type : String, features : PackedStringArray) ->
 			skip()
 			
 			if settings.export_mode != settings.ExportMode.TEXT:
-				var bytes : PackedByteArray = _binash.get_bytes_from_text(data, ext, settings.export_mode == settings.ExportMode.COMPRESSED)
+				var bytes : PackedByteArray = _binash.get_bytes_from_text(data, ext, settings.export_mode == settings.ExportMode.COMPRESSED, path)
 				
 				if bytes.size() > 0:
 					add_file(path.trim_suffix(ext) + ext.trim_prefix("t"), bytes, true)
@@ -349,7 +349,7 @@ func _export_file(path : String, type : String, features : PackedStringArray) ->
 				
 				if settings.export_mode != settings.ExportMode.TEXT:
 					
-					var bytes : PackedByteArray = _binash.get_bytes_from_text(data, "t" + ext, settings.export_mode == settings.ExportMode.COMPRESSED)
+					var bytes : PackedByteArray = _binash.get_bytes_from_text(data, "t" + ext, settings.export_mode == settings.ExportMode.COMPRESSED, path)
 					
 					if bytes.size() > 0:
 						add_file(path, bytes, false)

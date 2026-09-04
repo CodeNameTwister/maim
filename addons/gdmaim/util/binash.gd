@@ -127,7 +127,7 @@ func get_text(path_file : String) -> String:
 	
 	return xout
 				
-func get_bytes_from_text(data : String, ext_type : String, compressed : bool = false) -> PackedByteArray:
+func get_bytes_from_text(data : String, ext_type : String, compressed : bool = false, origin : String = "") -> PackedByteArray:
 	if ext_type.is_empty():
 		ext_type = "tres"
 		
@@ -138,7 +138,7 @@ func get_bytes_from_text(data : String, ext_type : String, compressed : bool = f
 	
 	_buffer[tmp] = true
 	
-	return get_bytes(tmp, compressed)
+	return get_bytes(tmp, compressed, origin)
 	
 func set_engine_abort_on_missing_resources(value : bool) -> void:
 	if !handle_abort_on_missing_resources:
@@ -146,7 +146,7 @@ func set_engine_abort_on_missing_resources(value : bool) -> void:
 		
 	ResourceLoader.set_abort_on_missing_resources(value)
 		
-func get_bytes(path_file : String, compressed) -> PackedByteArray:
+func get_bytes(path_file : String, compressed, origin : String = "") -> PackedByteArray:
 	var shtout : PackedByteArray = []
 	
 	if FileAccess.file_exists(path_file):
@@ -164,6 +164,9 @@ func get_bytes(path_file : String, compressed) -> PackedByteArray:
 		var flag : int = ResourceSaver.FLAG_NONE
 		
 		var xfout : String = TEMP_FILE + _id  + "res"
+		
+		if resort and !origin.is_empty():
+			resort.take_over_path(origin)
 		
 		if path_file.ends_with(".tscn"):
 			xfout = TEMP_FILE + _id  + "scn"
